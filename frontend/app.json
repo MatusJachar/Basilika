@@ -1,15 +1,23 @@
 {
   "expo": {
     "name": "Bazilika sv. Jakuba",
+<<<<<<< HEAD
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+=======
+    "slug": "bazilika-sv-jakuba",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/basilika-logo.png",
+>>>>>>> 185806f2af8a2ad68a30c77ad92762a020b5b6e5
     "scheme": "bazilika",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+<<<<<<< HEAD
       "bundleIdentifier": "com.matusjachar.bazilikavjakuba"
     },
     "android": {
@@ -20,24 +28,40 @@
       "package": "com.matusjachar.bazilikavjakuba",
       "versionCode": 1,
       "edgeToEdgeEnabled": true
+=======
+      "bundleIdentifier": "com.bazilika.jakuba"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/basilika-logo.png",
+        "backgroundColor": "#FDFBF7"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.bazilika.jakuba"
+>>>>>>> 185806f2af8a2ad68a30c77ad92762a020b5b6e5
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/basilika-logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/images/app-splash.jpg",
+          "imageWidth": 300,
           "resizeMode": "contain",
+<<<<<<< HEAD
           "backgroundColor": "#000000"
+=======
+          "backgroundColor": "#1a3d3d"
+>>>>>>> 185806f2af8a2ad68a30c77ad92762a020b5b6e5
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-av"
     ],
     "experiments": {
       "typedRoutes": true

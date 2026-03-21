@@ -1,75 +1,275 @@
-from fastapi import FastAPI, APIRouter
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
-import logging
-from pathlib import Path
-from pydantic import BaseModel, Field
-from typing import List
-import uuid
+"""
+Basilika sv. Jakuba - Audio Guide Backend API
+FastAPI server for the tour guide mobile app
+"""
+
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from typing import List, Optional
 from datetime import datetime
+import os
+import json
 
+app = FastAPI(
+    title="Basilika sv. Jakuba Audio Guide API",
+    description="Backend API for the Basilika tour guide mobile app",
+    version="1.0.0"
+)
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
-
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-# Create the main app without a prefix
-app = FastAPI()
-
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
-
-
-# Define Models
-class StatusCheck(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.dict()
-    status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
-
-# Include the router in the main app
-app.include_router(api_router)
-
+# CORS middleware - allow all origins for mobile app
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# ============== DATA MODELS ==============
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+class Language(BaseModel):
+    code: str
+    name: str
+    native_name: str
+    flag_emoji: str
+    is_active: bool = True
+    order: int
+
+class Translation(BaseModel):
+    language_code: str
+    title: str
+    description: str
+    audio_url: str
+
+class TourStop(BaseModel):
+    id: str
+    stop_number: int
+    image_url: str
+    translations: List[Translation]
+    duration_seconds: int
+    is_active: bool = True
+
+class SiteSettings(BaseModel):
+    id: str = "main"
+    site_name: str
+    site_subtitle: str
+    welcome_description: str
+    logo_url: str
+    default_hero_image: str
+
+class BasilicaInfo(BaseModel):
+    id: str
+    language_code: str
+    title: str
+    description: str
+
+# ============== STATIC DATA ==============
+
+LANGUAGES = [
+    Language(code="sk", name="Slovak", native_name="Slovensky", flag_emoji="🇸🇰", is_active=True, order=1),
+    Language(code="en", name="English", native_name="English", flag_emoji="🇬🇧", is_active=True, order=2),
+    Language(code="pl", name="Polish", native_name="Polski", flag_emoji="🇵🇱", is_active=True, order=3),
+    Language(code="de", name="German", native_name="Deutsch", flag_emoji="🇩🇪", is_active=True, order=4),
+    Language(code="hu", name="Hungarian", native_name="Magyar", flag_emoji="🇭🇺", is_active=True, order=5),
+]
+
+SITE_SETTINGS = SiteSettings(
+    id="main",
+    site_name="Bazilika sv. Jakuba",
+    site_subtitle="Bazilika sv. Jakuba",
+    welcome_description="Vitajte vo farskom kostole Baziliky sv.Jakuba a pri Modlitbe Majstra Pavla vytesanej do lipy.",
+    logo_url="https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/3xzc95u0_Spi%C5%A1sk%C3%A9_biskupstvo.svg.png",
+    default_hero_image="https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/jxtx73d9_Bazilika%20LE%20outside.jpg"
+)
+
+BASILICA_INFO = [
+    BasilicaInfo(id="info_sk", language_code="sk", title="Vitajte v Bazilike sv. Jakuba", description="Zažite posvätnú krásu a bohatú históriu našej veľkolepej Baziliky prostredníctvom tohto pútavého audio sprievodcu."),
+    BasilicaInfo(id="info_en", language_code="en", title="Welcome to St. James Basilica", description="Experience the sacred beauty and rich history of our magnificent Basilica through this captivating audio guide."),
+    BasilicaInfo(id="info_pl", language_code="pl", title="Witamy w Bazylice św. Jakuba", description="Doświadcz świętego piękna i bogatej historii naszej wspaniałej Bazyliki dzięki temu fascynującemu audioprzewodnikowi."),
+    BasilicaInfo(id="info_de", language_code="de", title="Willkommen in der Basilika St. Jakob", description="Erleben Sie die heilige Schönheit und reiche Geschichte unserer prächtigen Basilika durch diesen fesselnden Audioguide."),
+    BasilicaInfo(id="info_hu", language_code="hu", title="Üdvözöljük a Szent Jakab Bazilikában", description="Tapasztalja meg csodás Bazilikánk szent szépségét és gazdag történelmét ezen a lenyűgöző hangos útikalauzon keresztül."),
+]
+
+# Tour stops data
+TOUR_STOPS = [
+    TourStop(
+        id="620e38b5-d7d3-4a6c-87d4-b94328ec352b",
+        stop_number=1,
+        image_url="https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/98akeefs_1.Bazilika%20LE%201.jpg",
+        duration_seconds=180,
+        is_active=True,
+        translations=[
+            Translation(language_code="sk", title="Hlavný oltár.", description="Vitajte pri Modlitbe Majstra Pavla vytesanej do lipy a pod klenbami baziliky svätého Jakuba, ktoré už osem storočí dýchajú modlitbami našich predkov. Stojíte v srdci Levoče. v priestore zapísaného v UNESCU, kde sa stredoveká matematika druhého najväčšieho kostola na Sovensku a zároveň baziliky minor stretáva s nekonečnom.", audio_url="/api/uploads/audio/stop1_sk.mp3"),
+            Translation(language_code="en", title="Main Altar", description="Welcome to the Prayer of Master Paul carved into lime tree and under the vaults of the Basilica of St. James, which have been breathing the prayers of our ancestors for eight centuries. You are standing in the heart of Levoča. in a space registered in UNESCO, where the medieval mathematics of the second largest church in the Sovensko region and at the same time a minor basilica meets the infinite.", audio_url="/api/uploads/audio/stop1_en.mp3"),
+            Translation(language_code="pl", title="Główny ołtarz.", description="Witamy w Modlitwie Mistrza Pawła, wyrzeźbionej w drewnie lipowym pod sklepieniem Bazyliki św. Jakuba, która od ośmiu wieków rozbrzmiewa modlitwami naszych przodków. Stoisz w sercu Lewoczy, w przestrzeni wpisanej na listę UNESCO, gdzie średniowieczna architektura drugiego co do wielkości kościoła w regionie Sowieńskim, a jednocześnie bazyliki mniejszej, spotyka się z nieskończonością.", audio_url="/api/uploads/audio/stop1_pl.mp3"),
+            Translation(language_code="de", title="Hauptaltar.", description="Willkommen zum Gebet des Meisters Paulus, in Lindenholz gehauen und unter den Gewölben der Basilika St. Jakobus, die seit acht Jahrhunderten die Gebete unserer Vorfahren atmet. Sie befinden sich im Herzen von Levoča, an einem UNESCO-Weltkulturerbe, wo die mittelalterliche Architektur der zweitgrößten Kirche der Region Sovensko, zugleich aber auch eine Basilica minor, auf das Unendliche trifft.", audio_url="/api/uploads/audio/stop1_de.mp3"),
+            Translation(language_code="hu", title="Főoltár.", description="Üdvözöljük Önt Pál mester hársfába vésett imájában, a Szent Jakab-bazilika boltozatai alatt, melyek nyolc évszázada őseink imáit lehelik. Lőcse szívében áll, egy UNESCO által jegyzett térben, ahol a Szovensko régió második legnagyobb templomának és egyben egy kisebb bazilikának középkori matematikája találkozik a végtelennel.", audio_url="/api/uploads/audio/stop1_hu.mp3"),
+        ]
+    ),
+    TourStop(
+        id="1f8f0b50-e79d-4b0e-b74f-9da1af9a48ef",
+        stop_number=2,
+        image_url="https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/u98mcfsc_2.Bazilika%20LE.jpg",
+        duration_seconds=150,
+        is_active=True,
+        translations=[
+            Translation(language_code="sk", title="Renesančná Kazateľnica.", description="Kráčate dejinami, ktoré neboli vždy tiché. Táto nádherná, drevená, renesančná kazateľnica stála uprostred náboženských búrok, kedy ticho preťala mreža. Cítite to napätie? Predstavte si kostol rozťatý na polovicu železnou mrežou v časoch, kedy sa kresťania nevedeli dohodnúť na ceste k Bohu.", audio_url="/api/uploads/audio/stop2_sk.mp3"),
+            Translation(language_code="en", title="Renaissance Pulpit.", description="You are walking through a history that was not always silent. This beautiful, wooden, Renaissance pulpit stood in the middle of religious storms, when the silence was cut by the bars. Can you feel the tension? Imagine a church cut in half by an iron bar in a time when Christians could not agree on the path to God.", audio_url="/api/uploads/audio/stop2_en.mp3"),
+            Translation(language_code="pl", title="Ambona renesansowa.", description="Przemierzasz historię, która nie zawsze była cicha. Ta piękna, drewniana, renesansowa ambona stała pośród religijnych burz, gdy ciszę przerywały kraty. Czujesz to napięcie? Wyobraź sobie kościół przecięty na pół żelaznym prętem w czasach, gdy chrześcijanie nie mogli dojść do porozumienia co do drogi do Boga.", audio_url="/api/uploads/audio/stop2_pl.mp3"),
+            Translation(language_code="de", title="Renaissance-Kanzel.", description="Sie wandeln auf Spuren einer Geschichte, die nicht immer still war. Diese wunderschöne hölzerne Renaissance-Kanzel stand inmitten religiöser Auseinandersetzungen, als die Stille durch Gitterstäbe zerrissen wurde. Spüren Sie die Spannung? Stellen Sie sich eine Kirche vor, die von einem Eisenstab in zwei Hälften geteilt wurde, in einer Zeit, als sich die Christen nicht über den Weg zu Gott einigen konnten.", audio_url="/api/uploads/audio/stop2_de.mp3"),
+            Translation(language_code="hu", title="Reneszánsz szószék.", description="Egy olyan történelemben jársz, amely nem mindig volt csendes. Ez a gyönyörű, fából készült reneszánsz szószék vallási viharok közepette állt, amikor a csendet rácsok vágták ketté. Érzed a feszültséget? Képzelj el egy templomot, amelyet egy vasrúd vágott ketté egy olyan időben, amikor a keresztények nem tudtak megegyezni az Istenhez vezető úton.", audio_url="/api/uploads/audio/stop2_hu.mp3"),
+        ]
+    ),
+    TourStop(
+        id="958f785b-b280-43f9-b369-90077fe7509a",
+        stop_number=3,
+        image_url="https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/1tujom70_3.Bazilika%20LE.jpg",
+        duration_seconds=200,
+        is_active=True,
+        translations=[
+            Translation(language_code="sk", title="Veľký Orgán.", description="A teraz... vzhliadnite k chóru. Obrovský, majestátny organ pochádzajúci zo 17 storočia od Hansa Hummela. Gigant, ktorý kedysi nemal v celom Uhorsku páru, kedže bol do druhej polovice 19 storočia vôbec najväčší v krajine.", audio_url="/api/uploads/audio/stop3_sk.mp3"),
+            Translation(language_code="en", title="The Great Organ.", description="And now... look up at the choir. A huge, majestic organ from the 17th century by Hans Hummel. A giant that once had no equal in all of Hungary, as it was the largest in the country until the second half of the 19th century.", audio_url="/api/uploads/audio/stop3_en.mp3"),
+            Translation(language_code="pl", title="Wielkie Organy.", description="A teraz... spójrz w górę na chór. Ogromne, majestatyczne organy z XVII wieku autorstwa Hansa Hummla. Gigant, który kiedyś nie miał sobie równych na całych Węgrzech, bo do drugiej połowy XIX wieku był największym w kraju.", audio_url="/api/uploads/audio/stop3_pl.mp3"),
+            Translation(language_code="de", title="Die große Orgel.", description="Und nun... schauen Sie hinauf zum Chor. Eine riesige, majestätische Orgel aus dem 17. Jahrhundert von Hans Hummel. Ein Gigant, der einst in ganz Ungarn seinesgleichen suchte, da er bis zur zweiten Hälfte des 19. Jahrhunderts die größte des Landes war.", audio_url="/api/uploads/audio/stop3_de.mp3"),
+            Translation(language_code="hu", title="A Nagy Orgona.", description="És most... tekintsenek fel a kórusra. Egy hatalmas, fenséges orgona a 17. századból, Hans Hummel alkotása. Egy óriás, amelynek egykor nem volt párja egész Magyarországon, mivel a 19. század második feléig az ország legnagyobbja volt.", audio_url="/api/uploads/audio/stop3_hu.mp3"),
+        ]
+    ),
+    TourStop(
+        id="95a2b41d-9d88-491d-866b-9090b9a5b1e6",
+        stop_number=4,
+        image_url="https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/he3o7bmz_4.Bazilika%20LE.jpg",
+        duration_seconds=160,
+        is_active=True,
+        translations=[
+            Translation(language_code="sk", title="Lavica Levočskej Bielej Pani.", description="Hneď pri vchode, sa nachádza jedná z hlavíc, v ktorej mala sedávať ona. Juliana Korponayová. Krásna, vzdelaná, no nepokojná hriešna duša. Hovorí sa, že meškala na omšu schválne, aby dráždila mužov svojou krásou. No a kedže neustále prichádzala na bohoslužby neskoro, Pán farár jej preto vyčlenili toto miesto – aby nikoho nepokúšala a nevyrušovala. Aj keby prišla v strede omše mohla si hneď rovno sadnúť.", audio_url="/api/uploads/audio/stop4_sk.mp3"),
+            Translation(language_code="en", title="The bench of the White Lady of Levoča.", description="Right at the entrance, there is one of the heads, where she was supposed to sit. Juliana Korponayová. A beautiful, educated, but restless sinful soul. It is said that she was late for mass on purpose to tease men with her beauty. And since she was always late for services, the parish priest therefore set aside this place for her - so that she would not tempt or disturb anyone. Even if she arrived in the middle of mass, she could sit down right away.", audio_url="/api/uploads/audio/stop4_en.mp3"),
+            Translation(language_code="pl", title="Ławka Białej Damy z Lewoczy.", description="Tuż przy wejściu stoi jedna z głów, na której miała siedzieć. Juliana Korponayová. Piękna, wykształcona, ale niespokojna, grzeszna dusza. Podobno celowo spóźniała się na mszę, by drażnić mężczyzn swoją urodą. A ponieważ zawsze spóźniała się na nabożeństwa, proboszcz przeznaczył dla niej to miejsce – aby nikogo nie kusiła ani nie przeszkadzała. Nawet jeśli przyszła w trakcie mszy, mogła od razu usiąść.", audio_url="/api/uploads/audio/stop4_pl.mp3"),
+            Translation(language_code="de", title="Die Bank der Weißen Dame von Levoča.", description="Gleich am Eingang befindet sich einer der Köpfe, auf dem sie sitzen sollte. Juliana Korponayová. Eine schöne, gebildete, aber ruhelose, sündige Seele. Man sagt, sie sei absichtlich zu spät zur Messe gekommen, um Männer mit ihrer Schönheit zu reizen. Und weil sie immer zu spät zum Gottesdienst kam, reservierte der Pfarrer ihr diesen Platz – damit sie niemanden in Versuchung führte oder störte. Selbst wenn sie mitten in der Messe eintraf, konnte sie sich sofort hinsetzen.", audio_url="/api/uploads/audio/stop4_de.mp3"),
+            Translation(language_code="hu", title="A lőcsei Fehér Hölgy padja.", description="Közvetlenül a bejáratnál található az egyik pad, ahol ülnie kellett volna. Juliana Korponayová. Gyönyörű, művelt, de nyughatatlan bűnös lélek. Azt mondják, szándékosan késett a miséről, hogy szépségével ugrassa a férfiakat. Mivel pedig mindig késett az istentiszteletekről, a plébános ezért ezt a helyet tartotta fenn neki – hogy ne kísértsen és ne zavarjon senkit. Még ha a mise közepén érkezett is, azonnal leülhetett.", audio_url="/api/uploads/audio/stop4_hu.mp3"),
+        ]
+    ),
+    TourStop(
+        id="4da6c0ce-5e26-4df1-85b9-819f521ec592",
+        stop_number=5,
+        image_url="https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/6a0oa1j4_5.Bazilika.jpg",
+        duration_seconds=220,
+        is_active=True,
+        translations=[
+            Translation(language_code="sk", title="Lavica a tajomstvo pisára.", description="Teraz sa presuňte ešte hlbšie do minulosti. Pred vami stojí druhá najzaujímavejšia a najstaršia lavica v celom kostole. Rok tisíc štyristo deväťdesiat šesť. Vyrobili ju pre štyroch bratov Jagelovcov, ktorí tu v Levoči mávali diplomatické jednania a rozhodovali aj o osudoch Spiša.", audio_url="/api/uploads/audio/stop5_sk.mp3"),
+            Translation(language_code="en", title="The bench and the secret of the scribe.", description="Now move even deeper into the past. In front of you stands the second most interesting and oldest bench in the entire church. The year is 1496. It was made for the four Jagiellonian brothers, who held diplomatic negotiations here in Levoča and also decided the fate of Spiš.", audio_url="/api/uploads/audio/stop5_en.mp3"),
+            Translation(language_code="pl", title="Ławka i sekret pisarza.", description="Teraz przenieśmy się jeszcze głębiej w przeszłość. Przed wami stoi druga najciekawsza i najstarsza ławka w całym kościele. Pochodzi z 1496 roku. Została wykonana dla czterech braci Jagiellonów, którzy prowadzili tu, w Lewoczy, negocjacje dyplomatyczne i decydowali o losach Spisza.", audio_url="/api/uploads/audio/stop5_pl.mp3"),
+            Translation(language_code="de", title="Die Bank und das Geheimnis des Schreibers.", description="Nun reisen wir noch tiefer in die Vergangenheit. Vor Ihnen steht die zweitinteressanteste und älteste Bank der gesamten Kirche. Sie stammt aus dem Jahr 1496 und wurde für die vier Jagiellonenbrüder angefertigt, die hier in Levoča diplomatische Verhandlungen führten und auch über das Schicksal der Zips entschieden.", audio_url="/api/uploads/audio/stop5_de.mp3"),
+            Translation(language_code="hu", title="A pad és az írnok titka.", description="Most pedig merüljünk el még mélyebben a múltban. Előtte áll az egész templom második legérdekesebb és legrégebbi padja. Az év 1496. A négy Jagelló testvér számára készült, akik itt, Lőcsén folytattak diplomáciai tárgyalásokat, és Szepesség sorsáról is döntöttek.", audio_url="/api/uploads/audio/stop5_hu.mp3"),
+        ]
+    ),
+    TourStop(
+        id="5ec951bb-b841-43a3-84b8-277aacb21777",
+        stop_number=6,
+        image_url="https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/517moqq7_6.Bazilika%20LE.jpg",
+        duration_seconds=175,
+        is_active=True,
+        translations=[
+            Translation(language_code="sk", title="Oltár narodenia Pána a podpis Majstra Pavla.", description="Na konci tejto severnej lodi, pozorujte tento zvláštny oltár dvoch umeleckých štýlov... Je to stretnutie dvoch svetov. Barokový lesk sa tu snúbi s gotickou čistotou. Rozdiel medzi obdobiami skoro až 200 rokov. Ako je to možné a prečo je tomu tak? Sochy boli koncom 17 storočia nájdené za múrmi Levočskej radnice, kde boli ukryté. Po ich nájdení boli presunuté pred hlavný oltár, kde boli niekoľko rokov, až sa nad nimi v roku 1752 zľutoval ostrihomský arcibiskup.", audio_url="/api/uploads/audio/stop6_sk.mp3"),
+            Translation(language_code="en", title="Altar of the Nativity and the Signature of Master Paul.", description="At the end of this northern nave, observe this strange altar of two artistic styles... It is a meeting of two worlds. Baroque brilliance is combined here with Gothic purity. The difference between the periods is almost 200 years. How is this possible and why is this so? The statues were found behind the walls of the Levoča Town Hall at the end of the 17th century, where they had been hidden. After they were found, they were moved in front of the main altar, where they remained for several years, until the Archbishop of Esztergom took pity on them in 1752.", audio_url="/api/uploads/audio/stop6_en.mp3"),
+            Translation(language_code="pl", title="Ołtarz Narodzenia Pańskiego i Sygnatura Mistrza Pawła.", description="Na końcu tej północnej nawy znajduje się ten osobliwy ołtarz, będący połączeniem dwóch stylów artystycznych… To spotkanie dwóch światów. Barokowy blask łączy się tu z gotycką czystością. Różnica między tymi okresami wynosi prawie 200 lat. Jak to możliwe i dlaczego? Rzeźby odnaleziono pod koniec XVII wieku za murami ratusza w Lewoczy, gdzie były ukryte. Po ich odnalezieniu przeniesiono je przed ołtarz główny, gdzie pozostawały przez kilka lat, aż do momentu, gdy arcybiskup Ostrzyhomia zlitował się nad nimi w 1752 roku.", audio_url="/api/uploads/audio/stop6_pl.mp3"),
+            Translation(language_code="de", title="Geburtsaltar und Signatur von Meister Paul.", description="Am Ende des nördlichen Seitenschiffs befindet sich dieser ungewöhnliche Altar, der zwei Kunststile vereint. Hier treffen zwei Welten aufeinander: Barocke Pracht und gotische Reinheit. Zwischen den beiden Epochen liegen fast 200 Jahre. Wie ist das möglich und warum? Die Statuen wurden Ende des 17. Jahrhunderts hinter den Mauern des Rathauses von Levoča entdeckt, wo sie versteckt gewesen waren. Nach ihrer Entdeckung wurden sie vor den Hauptaltar gebracht und verblieben dort mehrere Jahre, bis der Erzbischof von Esztergom sich ihrer erbarmte und sie 1752 wieder aufnahm.", audio_url="/api/uploads/audio/stop6_de.mp3"),
+            Translation(language_code="hu", title="Születés oltára és Pál mester aláírása.", description="Ennek az északi hajónak a végén figyelje meg ezt a különös oltárt, amely két művészi stílust képvisel... Két világ találkozása. A barokk ragyogás itt gótikus tisztasággal ötvöződik. A korszakok közötti különbség közel 200 év. Hogyan lehetséges ez, és miért van ez így? A szobrokat a 17. század végén a lőcsei városháza falai mögött találták meg, ahol elrejtették őket. Miután megtalálták őket, a főoltár elé helyezték, ahol több évig maradtak, amíg az esztergomi érsek 1752-ben meg nem könyörgött rajtuk.", audio_url="/api/uploads/audio/stop6_hu.mp3"),
+        ]
+    ),
+    TourStop(
+        id="fce9d55e-4eb3-4c76-948e-08501336d271",
+        stop_number=7,
+        image_url="https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/alubrfy5_7.Bazilika%20LE.jpg",
+        duration_seconds=190,
+        is_active=True,
+        translations=[
+            Translation(language_code="sk", title="Stredoveké fresky - zrkadlo duše.", description="Severné steny kostolov bývajú chladné a bez okien. Tu, na tomto mieste od vchodu, do predu, na prvej časti sien severnej lodi, môžete vidieť nástenné fresky obrázkového cyklu legendy svätej Doroty, ktorá si vybrala vieru namiesto mučiteľa. Jedná sa o prvú kresťanskú mučenícu vôbec, do ktorej sa zamiloval pohanský šľachtic, ktorý si ju chcel zobrať za ženu.", audio_url="/api/uploads/audio/stop7_sk.mp3"),
+            Translation(language_code="en", title="Medieval Frescoes – The Mirror of the Soul.", description="The northern walls of churches are often cold and windowless. Here, in this place from the entrance, to the front, on the first part of the north aisle, you can see the wall frescoes of the pictorial cycle of the legend of Saint Dorothy, who chose faith over the torturer. This is the first Christian martyr ever, in whom a pagan nobleman fell in love and wanted to marry her.", audio_url="/api/uploads/audio/stop7_en.mp3"),
+            Translation(language_code="pl", title="Średniowieczne freski – zwierciadło duszy.", description="Północne ściany kościołów są często zimne i pozbawione okien. Tutaj, w tym miejscu, od wejścia, do frontu, w pierwszej części północnej nawy, można zobaczyć freski ścienne z cyklu obrazów legendy o świętej Dorocie, która wybrała wiarę ponad katem. To pierwsza chrześcijańska męczennica, w której zakochał się pogański szlachcic i pragnął ją poślubić.", audio_url="/api/uploads/audio/stop7_pl.mp3"),
+            Translation(language_code="de", title="Mittelalterliche Fresken – Der Spiegel der Seele.", description="Die Nordwände von Kirchen wirken oft kalt und fensterlos. Hier, vom Eingang bis zur Vorderseite, im ersten Teil des nördlichen Seitenschiffs, befinden sich die Wandfresken des Bildzyklus zur Legende der heiligen Dorothea, die sich für den Glauben und gegen ihren Peiniger entschied. Sie ist die erste christliche Märtyrerin überhaupt, in die sich ein heidnischer Adliger verliebte und die er heiraten wollte.", audio_url="/api/uploads/audio/stop7_de.mp3"),
+            Translation(language_code="hu", title="Középkori freskók – A lélek tükre.", description="A templomok északi falai gyakran hidegek és ablaktalanok. Itt, a bejárattól elöl, az északi hajó első részén láthatók Szent Dorothy legendájának képciklusát ábrázoló falfreskók, aki a kínzó helyett a hitet választotta. Ez az első keresztény mártír, akibe egy pogány nemes beleszeretett és feleségül akarta venni.", audio_url="/api/uploads/audio/stop7_hu.mp3"),
+        ]
+    ),
+]
+
+# ============== API ENDPOINTS ==============
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+@app.get("/api/languages", response_model=List[Language])
+async def get_languages():
+    """Get all available languages"""
+    return sorted(LANGUAGES, key=lambda x: x.order)
+
+@app.get("/api/tour-stops", response_model=List[TourStop])
+async def get_tour_stops():
+    """Get all tour stops with translations"""
+    return sorted([stop for stop in TOUR_STOPS if stop.is_active], key=lambda x: x.stop_number)
+
+@app.get("/api/tour-stops/{stop_id}", response_model=TourStop)
+async def get_tour_stop(stop_id: str):
+    """Get a single tour stop by ID"""
+    for stop in TOUR_STOPS:
+        if stop.id == stop_id:
+            return stop
+    raise HTTPException(status_code=404, detail="Tour stop not found")
+
+@app.get("/api/site-settings", response_model=SiteSettings)
+async def get_site_settings():
+    """Get site settings (logo, splash image, etc.)"""
+    return SITE_SETTINGS
+
+@app.get("/api/basilica-info")
+async def get_basilica_info(language: str = Query(default="sk")):
+    """Get basilica welcome info for a specific language"""
+    for info in BASILICA_INFO:
+        if info.language_code == language:
+            return info
+    # Fallback to Slovak if language not found
+    for info in BASILICA_INFO:
+        if info.language_code == "sk":
+            return info
+    raise HTTPException(status_code=404, detail="Basilica info not found")
+
+@app.get("/api/offline-package")
+async def get_offline_package():
+    """Get complete data package for offline use"""
+    return {
+        "languages": sorted(LANGUAGES, key=lambda x: x.order),
+        "tour_stops": sorted([stop for stop in TOUR_STOPS if stop.is_active], key=lambda x: x.stop_number),
+        "site_settings": SITE_SETTINGS,
+        "basilica_info": BASILICA_INFO,
+    }
+
+# ============== AUDIO FILE SERVING ==============
+
+# Create uploads directory if it doesn't exist
+AUDIO_DIR = os.path.join(os.path.dirname(__file__), "uploads", "audio")
+os.makedirs(AUDIO_DIR, exist_ok=True)
+
+@app.get("/api/uploads/audio/{filename}")
+async def get_audio_file(filename: str):
+    """Serve audio files"""
+    file_path = os.path.join(AUDIO_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(
+            file_path,
+            media_type="audio/mpeg",
+            headers={"Accept-Ranges": "bytes"}
+        )
+    raise HTTPException(status_code=404, detail=f"Audio file not found: {filename}")
+
+# ============== RUN SERVER ==============
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)

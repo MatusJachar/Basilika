@@ -2,16 +2,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy requirements from backend folder
-COPY backend/requirements.txt .
+# Install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire backend code
-COPY backend/ .
+# Copy application
+COPY server.py .
+COPY uploads/ uploads/
 
-# Create directory for audio files
-RUN mkdir -p /app/uploads/audio
+# Create audio directory
+RUN mkdir -p uploads/audio
 
-EXPOSE 3000
+# Expose port
+EXPOSE 8001
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "3000"]
+# Run server
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]
