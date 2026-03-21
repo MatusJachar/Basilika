@@ -1,0 +1,87 @@
+{
+  "audio_files_info": {
+    "total_files": 35,
+    "format": "MP3",
+    "base_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/",
+    "note": "Audio files need to be downloaded from the original server if still available, or from your backup"
+  },
+  "audio_files": [
+    {
+      "stop_number": 1,
+      "stop_title": "Hlavný oltár / Main Altar",
+      "files": [
+        {"language": "sk", "filename": "stop1_sk.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop1_sk.mp3"},
+        {"language": "en", "filename": "stop1_en.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop1_en.mp3"},
+        {"language": "pl", "filename": "stop1_pl.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop1_pl.mp3"},
+        {"language": "de", "filename": "stop1_de.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop1_de.mp3"},
+        {"language": "hu", "filename": "stop1_hu.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop1_hu.mp3"}
+      ]
+    },
+    {
+      "stop_number": 2,
+      "stop_title": "Renesančná Kazateľnica / Renaissance Pulpit",
+      "files": [
+        {"language": "sk", "filename": "stop2_sk.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop2_sk.mp3"},
+        {"language": "en", "filename": "stop2_en.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop2_en.mp3"},
+        {"language": "pl", "filename": "stop2_pl.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop2_pl.mp3"},
+        {"language": "de", "filename": "stop2_de.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop2_de.mp3"},
+        {"language": "hu", "filename": "stop2_hu.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop2_hu.mp3"}
+      ]
+    },
+    {
+      "stop_number": 3,
+      "stop_title": "Veľký Orgán / The Great Organ",
+      "files": [
+        {"language": "sk", "filename": "stop3_sk.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop3_sk.mp3"},
+        {"language": "en", "filename": "stop3_en.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop3_en.mp3"},
+        {"language": "pl", "filename": "stop3_pl.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop3_pl.mp3"},
+        {"language": "de", "filename": "stop3_de.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop3_de.mp3"},
+        {"language": "hu", "filename": "stop3_hu.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop3_hu.mp3"}
+      ]
+    },
+    {
+      "stop_number": 4,
+      "stop_title": "Lavica Levočskej Bielej Pani / The Bench of the White Lady",
+      "files": [
+        {"language": "sk", "filename": "stop4_sk.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop4_sk.mp3"},
+        {"language": "en", "filename": "stop4_en.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop4_en.mp3"},
+        {"language": "pl", "filename": "stop4_pl.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop4_pl.mp3"},
+        {"language": "de", "filename": "stop4_de.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop4_de.mp3"},
+        {"language": "hu", "filename": "stop4_hu.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop4_hu.mp3"}
+      ]
+    },
+    {
+      "stop_number": 5,
+      "stop_title": "Lavica a tajomstvo pisára / The Bench and the Secret of the Scribe",
+      "files": [
+        {"language": "sk", "filename": "stop5_sk.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop5_sk.mp3"},
+        {"language": "en", "filename": "stop5_en.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop5_en.mp3"},
+        {"language": "pl", "filename": "stop5_pl.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop5_pl.mp3"},
+        {"language": "de", "filename": "stop5_de.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop5_de.mp3"},
+        {"language": "hu", "filename": "stop5_hu.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop5_hu.mp3"}
+      ]
+    },
+    {
+      "stop_number": 6,
+      "stop_title": "Oltár narodenia Pána / Altar of the Nativity",
+      "files": [
+        {"language": "sk", "filename": "stop6_sk.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop6_sk.mp3"},
+        {"language": "en", "filename": "stop6_en.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop6_en.mp3"},
+        {"language": "pl", "filename": "stop6_pl.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop6_pl.mp3"},
+        {"language": "de", "filename": "stop6_de.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop6_de.mp3"},
+        {"language": "hu", "filename": "stop6_hu.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop6_hu.mp3"}
+      ]
+    },
+    {
+      "stop_number": 7,
+      "stop_title": "Stredoveké fresky / Medieval Frescoes",
+      "files": [
+        {"language": "sk", "filename": "stop7_sk.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop7_sk.mp3"},
+        {"language": "en", "filename": "stop7_en.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop7_en.mp3"},
+        {"language": "pl", "filename": "stop7_pl.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop7_pl.mp3"},
+        {"language": "de", "filename": "stop7_de.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop7_de.mp3"},
+        {"language": "hu", "filename": "stop7_hu.mp3", "full_url": "https://basilika-tour.preview.emergentagent.com/api/uploads/audio/stop7_hu.mp3"}
+      ]
+    }
+  ]
+}
