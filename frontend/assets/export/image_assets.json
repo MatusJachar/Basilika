@@ -1,0 +1,49 @@
+{
+  "image_assets": {
+    "logo": {
+      "description": "Spišské biskupstvo logo",
+      "url": "https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/3xzc95u0_Spi%C5%A1sk%C3%A9_biskupstvo.svg.png"
+    },
+    "splash_hero": {
+      "description": "Main splash/hero image - Basilica exterior",
+      "url": "https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/jxtx73d9_Bazilika%20LE%20outside.jpg"
+    },
+    "tour_stop_images": [
+      {
+        "stop_number": 1,
+        "title": "Hlavný oltár / Main Altar",
+        "url": "https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/98akeefs_1.Bazilika%20LE%201.jpg"
+      },
+      {
+        "stop_number": 2,
+        "title": "Renesančná Kazateľnica / Renaissance Pulpit",
+        "url": "https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/u98mcfsc_2.Bazilika%20LE.jpg"
+      },
+      {
+        "stop_number": 3,
+        "title": "Veľký Orgán / The Great Organ",
+        "url": "https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/1tujom70_3.Bazilika%20LE.jpg"
+      },
+      {
+        "stop_number": 4,
+        "title": "Lavica Levočskej Bielej Pani / The Bench of the White Lady",
+        "url": "https://customer-assets.emergentagent.com/job_2bdf76fb-d954-4619-b212-78ece4c66aa4/artifacts/he3o7bmz_4.Bazilika%20LE.jpg"
+      },
+      {
+        "stop_number": 5,
+        "title": "Lavica a tajomstvo pisára / The Bench and the Secret of the Scribe",
+        "url": "https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/6a0oa1j4_5.Bazilika.jpg"
+      },
+      {
+        "stop_number": 6,
+        "title": "Oltár narodenia Pána / Altar of the Nativity",
+        "url": "https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/517moqq7_6.Bazilika%20LE.jpg"
+      },
+      {
+        "stop_number": 7,
+        "title": "Stredoveké fresky / Medieval Frescoes",
+        "url": "https://customer-assets.emergentagent.com/job_art-tour-gallery/artifacts/alubrfy5_7.Bazilika%20LE.jpg"
+      }
+    ]
+  }
+}
