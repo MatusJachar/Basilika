@@ -1,0 +1,14 @@
+Supabase Path: You're blocked until credentials arrive, then need to design PostgreSQL schemas with proper relations, RLS policies, and migrations.
+
+Data Structure Fit
+Exhibition management naturally fits a document model:
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBnm0ntfMT6AgESmPVPaSmB1KkohlJbWJNNUVqx4KVY+ coolify-generated-ssh-key
+
+$user = App\Models\User::where('email', 'matusdzacar@gmail.com')->first();
+if ($user) {
+    $user->password = Hash::make('M@tuskocoolify123');
+    $user->save();
+    echo "Password updated for: " . $user->email . "\n";
+} else {
+    echo "User not found\n";
+}

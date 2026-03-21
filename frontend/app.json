@@ -1,21 +1,24 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "Bazilika sv. Jakuba",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "bazilika",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.matusjachar.bazilikavjakuba"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#000000"
       },
+      "package": "com.matusjachar.bazilikavjakuba",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -31,13 +34,18 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#000000"
         }
       ],
       "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "d1efa9af-8b43-43f6-be97-236f8bc78d99"
+      }
     }
   }
 }

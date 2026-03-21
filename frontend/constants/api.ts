@@ -1,5 +1,5 @@
 // API configuration for the deployed backend
-export const API_BASE_URL = 'https://basilika-tour.preview.emergentagent.com/api';
+export const API_BASE_URL = 'http://178.104.72.151:3000/api';
 
 export const API_ENDPOINTS = {
   health: '/health',
@@ -15,7 +15,7 @@ export const API_ENDPOINTS = {
 export const getFullUrl = (path: string): string => {
   if (path.startsWith('http')) return path;
   if (path.startsWith('/api')) {
-    return `https://basilika-tour.preview.emergentagent.com${path}`;
+    return `http://178.104.72.151:3000${path}`;
   }
   return `${API_BASE_URL}${path}`;
 };
