@@ -4,7 +4,7 @@
     "slug": "bazilika-sv-jakuba",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/basilika-logo.png",
+    "icon": "./assets/images/app-splash.jpg",
     "scheme": "bazilika",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,8 +14,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/basilika-logo.png",
-        "backgroundColor": "#FDFBF7"
+        "foregroundImage": "./assets/images/app-splash.jpg",
+        "backgroundColor": "#1a3d3d"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.bazilika.jakuba"
@@ -23,17 +23,17 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/basilika-logo.png"
+      "favicon": "./assets/images/app-splash.jpg"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/basilika-logo.png",
-          "imageWidth": 200,
+          "image": "./assets/images/app-splash.jpg",
+          "imageWidth": 300,
           "resizeMode": "contain",
-          "backgroundColor": "#FDFBF7"
+          "backgroundColor": "#1a3d3d"
         }
       ],
       "expo-font",
